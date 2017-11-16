@@ -958,6 +958,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                 break;
               case actionlib::SimpleClientGoalState::ABORTED:
                 // copy result from get_path action
+                exe_path_result = *action_client_exe_path.getResult();
                 move_base_result.dist_to_goal = exe_path_result.dist_to_goal;
                 move_base_result.angle_to_goal = exe_path_result.angle_to_goal;
                 move_base_result.server_code = exe_path_result.server_code;
@@ -965,7 +966,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                 move_base_result.plugin_code = exe_path_result.plugin_code;
                 move_base_result.plugin_msg = exe_path_result.plugin_msg;
                 move_base_result.final_pose = exe_path_result.pose;
-                exe_path_result = *action_client_exe_path.getResult();
                 switch (exe_path_result.server_code)
                 {
                   case move_base_flex_msgs::ExePathResult::OSCILLATION:
