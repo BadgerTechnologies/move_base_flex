@@ -758,9 +758,11 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
     move_base_flex_msgs::RecoveryResult recovery_result;
 
     std::vector<std::string> mbf_behaviors;
-    if (private_nh.getParam("mbf_action_recovery_behaviors", mbf_behaviors))
+    if (!private_nh.getParam("mbf_action_recovery_behaviors", mbf_behaviors))
     {
-      ROS_WARN_STREAM("No recovery behaviors given for the action \"" << name_action_move_base << "\"!");
+      ROS_WARN_STREAM("No recovery behaviors given for the action \"" << name_action_move_base << "\"!"
+		      << " Please set parameter " << private_nh.getNamespace()
+		      << "/" << "mbf_action_recovery_behaviors");
     }
 
     bool all_rb_loaded = true;
