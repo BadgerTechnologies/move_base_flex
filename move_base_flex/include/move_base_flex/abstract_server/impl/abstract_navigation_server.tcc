@@ -975,7 +975,9 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                   case move_base_flex_msgs::ExePathResult::PAT_EXCEEDED:
                   case move_base_flex_msgs::ExePathResult::MAX_RETRIES:
                   case move_base_flex_msgs::ExePathResult::INVALID_PATH:
-                    if (!clearing_rotation_allowed_)
+                    if (!clearing_rotation_allowed_
+			&& recovery_behavior_enabled_
+			&& current_recovery_behavior != mbf_behaviors.end())
                     {
                       recovery_ptr_->getTypeOfBehavior(*current_recovery_behavior, type);
                       if (type.find("RotateRecovery") != std::string::npos)
