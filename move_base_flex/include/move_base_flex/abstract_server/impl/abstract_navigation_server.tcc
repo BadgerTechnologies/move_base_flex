@@ -148,7 +148,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
       last_config_ = config;
       default_config_ = config;
       setup_reconfigure_ = true;
-      return;
     }
 
     if (config.restore_defaults)
