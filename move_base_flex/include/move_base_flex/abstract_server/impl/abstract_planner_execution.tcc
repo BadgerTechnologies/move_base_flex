@@ -112,7 +112,7 @@ template<class GLOBAL_PLANNER_BASE>
 
     if(!private_nh.getParam("global_planner", plugin_name_))
     {
-      ROS_ERROR_STREAM("Parameter \"global_planner\" ist not set!");
+      ROS_ERROR_STREAM("Parameter \"global_planner\" is not set!");
       exit(0);
     }
     private_nh.param("robot_frame", robot_frame_, std::string("base_footprint"));
