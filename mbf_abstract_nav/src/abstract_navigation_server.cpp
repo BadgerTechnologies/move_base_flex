@@ -629,6 +629,9 @@ void AbstractNavigationServer::callActionExePath(
 
       case AbstractControllerExecution::NO_LOCAL_CMD:
         ROS_WARN_STREAM_THROTTLE_NAMED(3, name_action_exe_path, "No velocity command received from local planner!");
+        fillExePathFeedback(moving_ptr_->getOutcome(), moving_ptr_->getMessage(),
+            geometry_msgs::TwistStamped(), feedback);
+        action_server_exe_path_ptr_->publishFeedback(feedback);
         break;
 
       case AbstractControllerExecution::GOT_LOCAL_CMD:
@@ -651,10 +654,12 @@ void AbstractNavigationServer::callActionExePath(
             break;
           }
         }
-        feedback.current_twist = moving_ptr_->getLastValidCmdVel();
-        feedback.current_pose = robot_pose_;
-        feedback.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
-        feedback.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
+        // feedback.current_twist = moving_ptr_->getLastValidCmdVel();
+        // feedback.current_pose = robot_pose_;
+        // feedback.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
+        // feedback.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
+        fillExePathFeedback(mbf_msgs::ExePathResult::SUCCESS, std::string(""),
+            moving_ptr_->getLastValidCmdVel(), feedback);
         action_server_exe_path_ptr_->publishFeedback(feedback);
         break;
 
@@ -1408,6 +1413,23 @@ void AbstractNavigationServer::fillExePathResult(uint32_t outcome, const std::st
   result.final_pose = robot_pose_;
   result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
   result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
+}
+
+void AbstractNavigationServer::fillExePathFeedback(
+        uint32_t outcome, const std::string &message,
+        const geometry_msgs::TwistStamped& current_twist,
+        mbf_msgs::ExePathFeedback &feedback)
+{
+  feedback.outcome = outcome;
+  feedback.message = message;
+
+  feedback.current_twist = current_twist;
+  if (feedback.current_twist.header.stamp.isZero())
+    feedback.current_twist.header.stamp = ros::Time::now();
+
+  feedback.current_pose = robot_pose_;
+  feedback.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
+  feedback.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
 }
 
 

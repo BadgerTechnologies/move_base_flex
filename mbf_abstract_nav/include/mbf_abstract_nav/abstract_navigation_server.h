@@ -219,6 +219,11 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      */
     void fillExePathResult(uint32_t outcome, const std::string &message, mbf_msgs::ExePathResult &result);
 
+    // FIXME: COMMENT
+    void fillExePathFeedback(
+            uint32_t outcome, const std::string &message,
+            const geometry_msgs::TwistStamped& current_twist,
+            mbf_msgs::ExePathFeedback &feedback);
     /**
      * @brief Start a dynamic reconfigure server.
      * This must be called only if the extending doesn't create its own.
