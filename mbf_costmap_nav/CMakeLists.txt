@@ -20,6 +20,8 @@ find_package(catkin REQUIRED
 
 find_package(Boost COMPONENTS thread chrono REQUIRED)
 
+set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+
 # dynamic reconfigure
 generate_dynamic_reconfigure_options(
   cfg/MoveBaseFlex.cfg

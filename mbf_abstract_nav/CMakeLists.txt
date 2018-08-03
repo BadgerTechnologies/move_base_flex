@@ -20,6 +20,8 @@ find_package(catkin REQUIRED
 
 find_package(Boost COMPONENTS thread chrono exception REQUIRED)
 
+set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+
 # dynamic reconfigure: we provide the abstract configuration common to all MBF-based navigation
 # frameworks in a python module, so it can easily be included in particular navigation flavours
 catkin_python_setup()
