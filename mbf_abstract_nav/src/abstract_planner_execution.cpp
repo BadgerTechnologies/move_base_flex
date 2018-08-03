@@ -255,10 +255,8 @@ namespace mbf_abstract_nav
                                                const geometry_msgs::PoseStamped &goal,
                                                double tolerance)
   {
-    if (planning_)
-    {
-      return false;
-    }
+    boost::this_thread::disable_interruption di;
+    thread_.join();
     boost::lock_guard<boost::mutex> guard(planning_mtx_);
     planning_ = true;
     cancel_ = false;

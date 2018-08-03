@@ -152,6 +152,8 @@ namespace mbf_abstract_nav
 
   void AbstractRecoveryExecution::startRecovery(const std::string &name)
   {
+    boost::this_thread::disable_interruption di;
+    thread_.join();
     requested_behavior_name_ = name;
     setState(STARTED);
     thread_ = boost::thread(&AbstractRecoveryExecution::run, this);

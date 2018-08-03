@@ -187,11 +187,9 @@ namespace mbf_abstract_nav
 
   bool AbstractControllerExecution::startMoving()
   {
+    boost::this_thread::disable_interruption di;
+    thread_.join();
     setState(STARTED);
-    if (moving_)
-    {
-      return false; // thread is already running.
-    }
     outcome_ = 255;
     message_ = "";
     moving_ = true;
