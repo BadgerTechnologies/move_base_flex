@@ -422,6 +422,7 @@ namespace mbf_abstract_nav
                 && ros::Time::now() - start_time_ > patience_)  // why not isPatienceExceeded() ?
             {
               setState(PAT_EXCEEDED);
+              ros::Duration(1.0).sleep();
               moving_ = false;
               condition_.notify_all();
             }
@@ -461,6 +462,7 @@ namespace mbf_abstract_nav
       publishZeroVelocity();  // TODO this penalizes continuous replanning, so we must handle better (see #64)
       setState(STOPPED);
       condition_.notify_all();
+      ros::Duration(1.0).sleep();
       moving_ = false;
     }
     catch (...)
