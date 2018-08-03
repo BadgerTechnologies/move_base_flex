@@ -43,6 +43,9 @@
 #include <mbf_msgs/ExePathResult.h>
 #include <boost/exception/diagnostic_information.hpp>
 
+#include <boost/scope_exit.hpp>
+#include <csignal>
+
 namespace mbf_abstract_nav
 {
 
@@ -188,6 +191,7 @@ namespace mbf_abstract_nav
   bool AbstractControllerExecution::startMoving()
   {
     boost::this_thread::disable_interruption di;
+    std::cout << "startMoving joining" << std::endl;
     thread_.join();
     setState(STARTED);
     outcome_ = 255;
@@ -201,6 +205,9 @@ namespace mbf_abstract_nav
   void AbstractControllerExecution::stopMoving()
   {
     thread_.interrupt();
+    boost::this_thread::disable_interruption di;
+    std::cout << "stopMoving joining" << std::endl;
+    thread_.join();
   }
 
 
@@ -327,6 +334,11 @@ namespace mbf_abstract_nav
 
   void AbstractControllerExecution::run()
   {
+
+    BOOST_SCOPE_EXIT(void)
+    {
+      std::cout << "Exiting AbstractControllerExecution::run()" << std::endl;
+    } BOOST_SCOPE_EXIT_END
 
     start_time_ = ros::Time::now();
 
@@ -459,11 +471,13 @@ namespace mbf_abstract_nav
       // Controller thread interrupted; in most cases we have started a new plan
       // Can also be that robot is oscillating or we have exceeded planner patience
       ROS_DEBUG_STREAM("Controller thread interrupted!");
+      ROS_ERROR_STREAM("Controller thread interrupted! " + boost::current_exception_diagnostic_information());
       publishZeroVelocity();  // TODO this penalizes continuous replanning, so we must handle better (see #64)
       setState(STOPPED);
       condition_.notify_all();
       ros::Duration(1.0).sleep();
       moving_ = false;
+      //std::raise(SIGINT);
     }
     catch (...)
     {
