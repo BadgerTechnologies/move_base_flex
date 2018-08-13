@@ -781,8 +781,15 @@ void AbstractNavigationServer::callActionRecovery(
 
       case AbstractRecoveryExecution::RECOVERY_DONE:
         active_recovery_ = false; // stopping the action
-        result.outcome = mbf_msgs::RecoveryResult::SUCCESS;
-        result.message = "Recovery \"" + behavior + "\" done!";
+        result.outcome = recovery_ptr_->getOutcome();
+        result.message = recovery_ptr_->getMessage();
+        if (result.message.size() == 0)
+        {
+          if (result.outcome < 10)
+            result.message = "Recovery \"" + behavior + "\" done!";
+          else
+            result.message = "Recovery \"" + behavior + "\" FAILED";
+        }
         ROS_DEBUG_STREAM_NAMED(name_action_recovery, result.message);
         action_server_recovery_ptr_->setSucceeded(result, result.message);
         break;

@@ -170,6 +170,17 @@ namespace mbf_abstract_nav
      */
     bool getTypeOfBehavior(const std::string &name, std::string &type);
 
+    /**
+     * @brief Gets the current plugin execution outcome
+     */
+    uint32_t getOutcome() { return outcome_; };
+
+    /**
+     * @brief Gets the current plugin execution message
+     */
+    std::string getMessage() { return message_; };
+
+
   protected:
 
     /**
@@ -246,6 +257,12 @@ namespace mbf_abstract_nav
 
     //! current internal state
     RecoveryState state_;
+
+    //! the last received plugin execution outcome
+    uint32_t outcome_;
+
+    //! the last received plugin execution message
+    std::string message_;
 
     //! current canceled state
     bool canceled_;

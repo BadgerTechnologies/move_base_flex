@@ -155,6 +155,8 @@ namespace mbf_abstract_nav
     boost::this_thread::disable_interruption di;
     thread_.join();
     requested_behavior_name_ = name;
+    outcome_ = 255;
+    message_ = "";
     setState(STARTED);
     thread_ = boost::thread(&AbstractRecoveryExecution::run, this);
   }
@@ -239,8 +241,7 @@ namespace mbf_abstract_nav
     try
     {
       // TODO use outcome and message
-      std::string message;
-      uint32_t outcome = current_behavior_->runBehavior(message);
+      outcome_ = current_behavior_->runBehavior(message_);
       if (canceled_)
       {
         setState(CANCELED);
