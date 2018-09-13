@@ -191,23 +191,45 @@ namespace mbf_abstract_nav
   bool AbstractControllerExecution::startMoving()
   {
     boost::this_thread::disable_interruption di;
-    std::cout << "startMoving joining" << std::endl;
-    thread_.join();
+
+    if (is_controller_thread_running_)
+    {
+      if (isMoving())
+      {
+        ROS_DEBUG("startMoving: Already running");
+        return true;
+      }
+      // thread exists but is about to exit, so we'll have to restart it
+      ROS_DEBUG("startMoving joining %d", static_cast<int>(getState()));
+      thread_.join();
+      ROS_DEBUG("startMoving Done Joining");
+    }
+
     setState(STARTED);
     outcome_ = 255;
     message_ = "";
     moving_ = true;
     thread_ = boost::thread(&AbstractControllerExecution::run, this);
+    is_controller_thread_running_ = true;
     return true;
   }
 
 
   void AbstractControllerExecution::stopMoving()
   {
-    thread_.interrupt();
-    boost::this_thread::disable_interruption di;
-    std::cout << "stopMoving joining" << std::endl;
-    thread_.join();
+    if (is_controller_thread_running_)
+    {
+      thread_.interrupt();
+      boost::this_thread::disable_interruption di;
+      ROS_DEBUG("stopMoving joining");
+      thread_.join();
+      ROS_DEBUG("stopMoving Done Joining");
+      is_controller_thread_running_ = false;
+    }
+    else
+    {
+      ROS_DEBUG("stopMoving: Was already stopped");
+    }
   }
 
 

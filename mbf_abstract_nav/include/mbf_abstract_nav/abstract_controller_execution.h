@@ -372,6 +372,10 @@ namespace mbf_abstract_nav
     //! main controller loop variable, true if the controller is running, false otherwise
     bool moving_;
 
+    //! Flag only tracks whether thread exists. It does not need mutex because
+    //  it is only ever accessed by one thread
+    bool is_controller_thread_running_;
+
     //! whether move base flex should check for the goal tolerance or not.
     bool mbf_tolerance_check_;
 
