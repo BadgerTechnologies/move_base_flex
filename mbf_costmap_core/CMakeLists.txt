@@ -6,6 +6,7 @@ find_package(catkin REQUIRED
             std_msgs
             geometry_msgs
             mbf_abstract_core
+            mbf_utility
             tf
             costmap_2d
             nav_core
@@ -21,6 +22,7 @@ catkin_package(
             tf
             costmap_2d
             nav_core
+            mbf_utility
 )
 
 if("$ENV{ROS_DISTRO}" STREQUAL "indigo")
