@@ -57,6 +57,7 @@ namespace mbf_costmap_nav
  *
  * @ingroup controller_execution move_base_server
  */
+template<typename CostmapNDROS>
 class CostmapControllerExecution : public mbf_abstract_nav::AbstractControllerExecution
 {
 public:
@@ -77,7 +78,7 @@ public:
       const ros::Publisher &vel_pub,
       const ros::Publisher &goal_pub,
       const TFPtr &tf_listener_ptr,
-      const CostmapWrapper::Ptr &costmap_ptr,
+      const typename CostmapWrapper<CostmapNDROS>::Ptr &costmap_ptr,
       const MoveBaseFlexConfig &config);
 
   /**
@@ -131,7 +132,7 @@ private:
   mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 
   //! Shared pointer to thr local costmap
-  const CostmapWrapper::Ptr &costmap_ptr_;
+  const typename CostmapWrapper<CostmapNDROS>::Ptr &costmap_ptr_;
 
   //! Whether to lock costmap before calling the controller (see issue #4 for details)
   bool lock_costmap_;

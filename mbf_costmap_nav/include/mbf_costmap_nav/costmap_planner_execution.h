@@ -57,6 +57,7 @@ namespace mbf_costmap_nav
  *
  * @ingroup planner_execution move_base_server
  */
+template<typename CostmapNDROS>
 class CostmapPlannerExecution : public mbf_abstract_nav::AbstractPlannerExecution
 {
 public:
@@ -69,7 +70,7 @@ public:
    * @param config Current server configuration (dynamic).
    */
   CostmapPlannerExecution(const std::string& planner_name, const mbf_costmap_core::CostmapPlanner::Ptr& planner_ptr,
-                          const TFPtr& tf_listener_ptr, const CostmapWrapper::Ptr& costmap_ptr,
+                          const TFPtr& tf_listener_ptr, const typename CostmapWrapper<CostmapNDROS>::Ptr& costmap_ptr,
                           const MoveBaseFlexConfig& config);
 
   /**
@@ -119,7 +120,7 @@ private:
       std::string &message);
 
   //! Shared pointer to the global planner costmap
-  const CostmapWrapper::Ptr &costmap_ptr_;
+  const typename CostmapWrapper<CostmapNDROS>::Ptr &costmap_ptr_;
 
   //! Whether to lock costmap before calling the planner (see issue #4 for details)
   bool lock_costmap_;

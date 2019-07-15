@@ -37,6 +37,9 @@
  *    Jorge Santos Simón <santos@magazino.eu>
  *
  */
+
+#include <costmap_2d/costmap_2d_ros.h>
+#include <costmap_3d/costmap_3d_ros.h>
 #include <nav_core_wrapper/wrapper_global_planner.h>
 #include <mbf_msgs/GetPathResult.h>
 
@@ -44,21 +47,27 @@
 
 namespace mbf_costmap_nav
 {
-CostmapPlannerExecution::CostmapPlannerExecution(const std::string& planner_name,
-                                                 const mbf_costmap_core::CostmapPlanner::Ptr& planner_ptr,
-                                                 const TFPtr& tf_listener_ptr, const CostmapWrapper::Ptr& costmap_ptr,
-                                                 const MoveBaseFlexConfig& config)
+
+template<typename CostmapNDROS>
+CostmapPlannerExecution<CostmapNDROS>::CostmapPlannerExecution(
+    const std::string& planner_name,
+    const mbf_costmap_core::CostmapPlanner::Ptr& planner_ptr,
+    const TFPtr& tf_listener_ptr,
+    const typename CostmapWrapper<CostmapNDROS>::Ptr& costmap_ptr,
+    const MoveBaseFlexConfig& config)
   : AbstractPlannerExecution(planner_name, planner_ptr, tf_listener_ptr, toAbstract(config)), costmap_ptr_(costmap_ptr)
 {
   ros::NodeHandle private_nh("~");
   private_nh.param("planner_lock_costmap", lock_costmap_, true);
 }
 
-CostmapPlannerExecution::~CostmapPlannerExecution()
+template<typename CostmapNDROS>
+CostmapPlannerExecution<CostmapNDROS>::~CostmapPlannerExecution()
 {
 }
 
-mbf_abstract_nav::MoveBaseFlexConfig CostmapPlannerExecution::toAbstract(const MoveBaseFlexConfig &config)
+template<typename CostmapNDROS>
+mbf_abstract_nav::MoveBaseFlexConfig CostmapPlannerExecution<CostmapNDROS>::toAbstract(const MoveBaseFlexConfig &config)
 {
   // copy the planner-related abstract configuration common to all MBF-based navigation
   mbf_abstract_nav::MoveBaseFlexConfig abstract_config;
@@ -68,12 +77,13 @@ mbf_abstract_nav::MoveBaseFlexConfig CostmapPlannerExecution::toAbstract(const M
   return abstract_config;
 }
 
-uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped &start,
-                                           const geometry_msgs::PoseStamped &goal,
-                                           double tolerance,
-                                           std::vector<geometry_msgs::PoseStamped> &plan,
-                                           double &cost,
-                                           std::string &message)
+template<typename CostmapNDROS>
+uint32_t CostmapPlannerExecution<CostmapNDROS>::makePlan(const geometry_msgs::PoseStamped &start,
+                                                         const geometry_msgs::PoseStamped &goal,
+                                                         double tolerance,
+                                                         std::vector<geometry_msgs::PoseStamped> &plan,
+                                                         double &cost,
+                                                         std::string &message)
 {
   // transform the input to the global frame of the costmap, since this is an
   // "implicit" requirement for most planners
@@ -96,5 +106,8 @@ uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped &sta
   }
   return planner_->makePlan(g_start, g_goal, tolerance, plan, cost, message);
 }
+
+template class CostmapPlannerExecution<costmap_2d::Costmap2DROS>;
+template class CostmapPlannerExecution<costmap_3d::Costmap3DROS>;
 
 } /* namespace mbf_costmap_nav */

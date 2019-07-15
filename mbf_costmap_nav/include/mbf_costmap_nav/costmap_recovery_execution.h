@@ -57,6 +57,7 @@ namespace mbf_costmap_nav
  *
  * @ingroup recovery_execution move_base_server
  */
+template<typename CostmapNDROS>
 class CostmapRecoveryExecution : public mbf_abstract_nav::AbstractRecoveryExecution
 {
 
@@ -76,8 +77,8 @@ public:
       const std::string &recovery_name,
       const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
       const TFPtr &tf_listener_ptr,
-      const CostmapWrapper::Ptr &global_costmap,
-      const CostmapWrapper::Ptr &local_costmap,
+      const typename CostmapWrapper<CostmapNDROS>::Ptr &global_costmap,
+      const typename CostmapWrapper<CostmapNDROS>::Ptr &local_costmap,
       const MoveBaseFlexConfig &config);
 
   /**
@@ -109,10 +110,10 @@ private:
   mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 
   //! Shared pointer to the global costmap
-  const CostmapWrapper::Ptr &global_costmap_;
+  const typename CostmapWrapper<CostmapNDROS>::Ptr &global_costmap_;
 
   //! Shared pointer to thr local costmap
-  const CostmapWrapper::Ptr &local_costmap_;
+  const typename CostmapWrapper<CostmapNDROS>::Ptr &local_costmap_;
 };
 
 } /* namespace mbf_costmap_nav */

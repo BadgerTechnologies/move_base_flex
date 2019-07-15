@@ -48,15 +48,19 @@
 #include <nav_core_wrapper/wrapper_local_planner.h>
 #include <nav_core_wrapper/wrapper_recovery_behavior.h>
 
+#include "costmap_2d/costmap_2d_ros.h"
+#include "costmap_3d/costmap_3d_ros.h"
 #include "mbf_costmap_nav/footprint_helper.h"
 #include "mbf_costmap_nav/costmap_navigation_server.h"
 
 namespace mbf_costmap_nav
 {
 
-CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr,
-                                                 const CostmapWrapper::Ptr &global_costmap_ptr,
-                                                 const CostmapWrapper::Ptr &local_costmap_ptr) :
+template<typename CostmapNDROS>
+CostmapNavigationServer<CostmapNDROS>::CostmapNavigationServer(
+    const TFPtr &tf_listener_ptr,
+    const typename CostmapWrapper<CostmapNDROS>::Ptr &global_costmap_ptr,
+    const typename CostmapWrapper<CostmapNDROS>::Ptr &local_costmap_ptr) :
   AbstractNavigationServer(tf_listener_ptr),
   recovery_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapRecovery"),
   nav_core_recovery_plugin_loader_("nav_core", "nav_core::RecoveryBehavior"),
@@ -70,26 +74,26 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr,
 {
   if (!global_costmap_ptr_)
   {
-    global_costmap_ptr_ = boost::make_shared<CostmapWrapper>("global_costmap", tf_listener_ptr_);
+    global_costmap_ptr_ = boost::make_shared<CostmapWrapper<CostmapNDROS>>("global_costmap", tf_listener_ptr_);
   }
   if (!local_costmap_ptr_)
   {
-    local_costmap_ptr_ = boost::make_shared<CostmapWrapper>("local_costmap", tf_listener_ptr_);
+    local_costmap_ptr_ = boost::make_shared<CostmapWrapper<CostmapNDROS>>("local_costmap", tf_listener_ptr_);
   }
 
   // advertise services and current goal topic
   check_point_cost_srv_ = private_nh_.advertiseService("check_point_cost",
-                                                       &CostmapNavigationServer::callServiceCheckPointCost, this);
+      &CostmapNavigationServer<CostmapNDROS>::callServiceCheckPointCost, this);
   check_pose_cost_srv_ = private_nh_.advertiseService("check_pose_cost",
-                                                      &CostmapNavigationServer::callServiceCheckPoseCost, this);
+      &CostmapNavigationServer<CostmapNDROS>::callServiceCheckPoseCost, this);
   check_path_cost_srv_ = private_nh_.advertiseService("check_path_cost",
-                                                      &CostmapNavigationServer::callServiceCheckPathCost, this);
+      &CostmapNavigationServer<CostmapNDROS>::callServiceCheckPathCost, this);
   clear_costmaps_srv_ = private_nh_.advertiseService("clear_costmaps",
-                                                     &CostmapNavigationServer::callServiceClearCostmaps, this);
+      &CostmapNavigationServer<CostmapNDROS>::callServiceClearCostmaps, this);
 
   // dynamic reconfigure server for mbf_costmap_nav configuration; also include abstract server parameters
   dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
-  dsrv_costmap_->setCallback(boost::bind(&CostmapNavigationServer::reconfigure, this, _1, _2));
+  dsrv_costmap_->setCallback(boost::bind(&CostmapNavigationServer<CostmapNDROS>::reconfigure, this, _1, _2));
 
   // initialize all plugins
   initializeServerComponents();
@@ -98,7 +102,8 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr,
   startActionServers();
 }
 
-CostmapNavigationServer::~CostmapNavigationServer()
+template<typename CostmapNDROS>
+CostmapNavigationServer<CostmapNDROS>::~CostmapNavigationServer()
 {
   // remove every plugin before its classLoader goes out of scope.
   controller_plugin_manager_.clearPlugins();
@@ -111,20 +116,22 @@ CostmapNavigationServer::~CostmapNavigationServer()
   action_server_move_base_ptr_.reset();
 }
 
-mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
+template<typename CostmapNDROS>
+mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer<CostmapNDROS>::newPlannerExecution(
     const std::string &plugin_name,
     const mbf_abstract_core::AbstractPlanner::Ptr &plugin_ptr)
 {
-  return boost::make_shared<mbf_costmap_nav::CostmapPlannerExecution>(
+  return boost::make_shared<mbf_costmap_nav::CostmapPlannerExecution<CostmapNDROS>>(
       plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(plugin_ptr), tf_listener_ptr_,
       global_costmap_ptr_, last_config_);
 }
 
-mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newControllerExecution(
+template<typename CostmapNDROS>
+mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer<CostmapNDROS>::newControllerExecution(
     const std::string &plugin_name,
     const mbf_abstract_core::AbstractController::Ptr &plugin_ptr)
 {
-  return boost::make_shared<mbf_costmap_nav::CostmapControllerExecution>(
+  return boost::make_shared<mbf_costmap_nav::CostmapControllerExecution<CostmapNDROS>>(
       plugin_name,
       boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr),
       vel_pub_,
@@ -134,11 +141,12 @@ mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newC
       last_config_);
 }
 
-mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRecoveryExecution(
+template<typename CostmapNDROS>
+mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer<CostmapNDROS>::newRecoveryExecution(
     const std::string &plugin_name,
     const mbf_abstract_core::AbstractRecovery::Ptr &plugin_ptr)
 {
-  return boost::make_shared<mbf_costmap_nav::CostmapRecoveryExecution>(
+  return boost::make_shared<mbf_costmap_nav::CostmapRecoveryExecution<CostmapNDROS>>(
       plugin_name,
       boost::static_pointer_cast<mbf_costmap_core::CostmapRecovery>(plugin_ptr),
       tf_listener_ptr_,
@@ -147,7 +155,9 @@ mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRec
       last_config_);
 }
 
-mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlugin(const std::string &planner_type)
+template<typename CostmapNDROS>
+mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer<CostmapNDROS>::loadPlannerPlugin(
+    const std::string &planner_type)
 {
   mbf_abstract_core::AbstractPlanner::Ptr planner_ptr;
   try
@@ -179,7 +189,8 @@ mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlug
   return planner_ptr;
 }
 
-bool CostmapNavigationServer::initializePlannerPlugin(
+template<typename CostmapNDROS>
+bool CostmapNavigationServer<CostmapNDROS>::initializePlannerPlugin(
     const std::string &name,
     const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr
 )
@@ -199,8 +210,9 @@ bool CostmapNavigationServer::initializePlannerPlugin(
   return true;
 }
 
-
-mbf_abstract_core::AbstractController::Ptr CostmapNavigationServer::loadControllerPlugin(const std::string &controller_type)
+template<typename CostmapNDROS>
+mbf_abstract_core::AbstractController::Ptr CostmapNavigationServer<CostmapNDROS>::loadControllerPlugin(
+    const std::string &controller_type)
 {
   mbf_abstract_core::AbstractController::Ptr controller_ptr;
   try
@@ -231,7 +243,8 @@ mbf_abstract_core::AbstractController::Ptr CostmapNavigationServer::loadControll
   return controller_ptr;
 }
 
-bool CostmapNavigationServer::initializeControllerPlugin(
+template<typename CostmapNDROS>
+bool CostmapNavigationServer<CostmapNDROS>::initializeControllerPlugin(
     const std::string &name,
     const mbf_abstract_core::AbstractController::Ptr &controller_ptr)
 {
@@ -256,7 +269,8 @@ bool CostmapNavigationServer::initializeControllerPlugin(
   return true;
 }
 
-mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer::loadRecoveryPlugin(
+template<typename CostmapNDROS>
+mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer<CostmapNDROS>::loadRecoveryPlugin(
     const std::string &recovery_type)
 {
   mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr;
@@ -293,7 +307,8 @@ mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer::loadRecoveryPl
   return recovery_ptr;
 }
 
-bool CostmapNavigationServer::initializeRecoveryPlugin(
+template<typename CostmapNDROS>
+bool CostmapNavigationServer<CostmapNDROS>::initializeRecoveryPlugin(
     const std::string &name,
     const mbf_abstract_core::AbstractRecovery::Ptr &behavior_ptr)
 {
@@ -324,8 +339,8 @@ bool CostmapNavigationServer::initializeRecoveryPlugin(
   return true;
 }
 
-
-void CostmapNavigationServer::stop()
+template<typename CostmapNDROS>
+void CostmapNavigationServer<CostmapNDROS>::stop()
 {
   AbstractNavigationServer::stop();
   ROS_INFO_STREAM_NAMED("mbf_costmap_nav", "Stopping local and global costmap for shutdown");
@@ -333,7 +348,8 @@ void CostmapNavigationServer::stop()
   global_costmap_ptr_->stop();
 }
 
-void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)
+template<typename CostmapNDROS>
+void CostmapNavigationServer<CostmapNDROS>::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)
 {
   // Make sure we have the original configuration the first time we're called, so we can restore it if needed
   if (!setup_reconfigure_)
@@ -371,11 +387,12 @@ void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &c
   last_config_ = config;
 }
 
-bool CostmapNavigationServer::callServiceCheckPointCost(mbf_msgs::CheckPoint::Request &request,
-                                                        mbf_msgs::CheckPoint::Response &response)
+template<typename CostmapNDROS>
+bool CostmapNavigationServer<CostmapNDROS>::callServiceCheckPointCost(mbf_msgs::CheckPoint::Request &request,
+                                                                      mbf_msgs::CheckPoint::Response &response)
 {
   // selecting the requested costmap
-  CostmapWrapper::Ptr costmap;
+  typename CostmapWrapper<CostmapNDROS>::Ptr costmap;
   std::string costmap_name;
   switch (request.costmap)
   {
@@ -448,11 +465,12 @@ bool CostmapNavigationServer::callServiceCheckPointCost(mbf_msgs::CheckPoint::Re
   return true;
 }
 
-bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Request &request,
-                                                       mbf_msgs::CheckPose::Response &response)
+template<typename CostmapNDROS>
+bool CostmapNavigationServer<CostmapNDROS>::callServiceCheckPoseCost(mbf_msgs::CheckPose::Request &request,
+                                                                     mbf_msgs::CheckPose::Response &response)
 {
   // selecting the requested costmap
-  CostmapWrapper::Ptr costmap;
+  typename CostmapWrapper<CostmapNDROS>::Ptr costmap;
   std::string costmap_name;
   switch (request.costmap)
   {
@@ -571,11 +589,12 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   return true;
 }
 
-bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Request &request,
-                                                       mbf_msgs::CheckPath::Response &response)
+template<typename CostmapNDROS>
+bool CostmapNavigationServer<CostmapNDROS>::callServiceCheckPathCost(mbf_msgs::CheckPath::Request &request,
+                                                                     mbf_msgs::CheckPath::Response &response)
 {
   // selecting the requested costmap
-  CostmapWrapper::Ptr costmap;
+  typename CostmapWrapper<CostmapNDROS>::Ptr costmap;
   std::string costmap_name;
   switch (request.costmap)
   {
@@ -714,13 +733,17 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
   return true;
 }
 
-bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request &request,
-                                                       std_srvs::Empty::Response &response)
+template<typename CostmapNDROS>
+bool CostmapNavigationServer<CostmapNDROS>::callServiceClearCostmaps(std_srvs::Empty::Request &request,
+                                                                     std_srvs::Empty::Response &response)
 {
   // clear both costmaps
   local_costmap_ptr_->clear();
   global_costmap_ptr_->clear();
   return true;
 }
+
+template class CostmapNavigationServer<costmap_2d::Costmap2DROS>;
+template class CostmapNavigationServer<costmap_3d::Costmap3DROS>;
 
 } /* namespace mbf_costmap_nav */

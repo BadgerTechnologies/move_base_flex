@@ -77,11 +77,12 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseF
  *
  * @ingroup navigation_server move_base_server
  */
+template<typename CostmapNDROS>
 class CostmapNavigationServer : public mbf_abstract_nav::AbstractNavigationServer
 {
 public:
 
-  typedef boost::shared_ptr<CostmapNavigationServer> Ptr;
+  typedef boost::shared_ptr<CostmapNavigationServer<CostmapNDROS>> Ptr;
 
   /**
    * @brief Constructor
@@ -89,9 +90,10 @@ public:
    * @param global_costmap_ptr Optional shared pointer to the global costmap
    * @param local_costmap_ptr Optional shared pointer to the local costmap
    */
-  CostmapNavigationServer(const TFPtr &tf_listener_ptr,
-                          const CostmapWrapper::Ptr &global_costmap_ptr = CostmapWrapper::Ptr(),
-                          const CostmapWrapper::Ptr &local_costmap_ptr = CostmapWrapper::Ptr());
+  CostmapNavigationServer(
+      const TFPtr &tf_listener_ptr,
+      const typename CostmapWrapper<CostmapNDROS>::Ptr &global_costmap_ptr = typename CostmapWrapper<CostmapNDROS>::Ptr(),
+      const typename CostmapWrapper<CostmapNDROS>::Ptr &local_costmap_ptr = typename CostmapWrapper<CostmapNDROS>::Ptr());
 
   /**
    * @brief Destructor
@@ -249,10 +251,10 @@ private:
   bool setup_reconfigure_;
 
   //! Shared pointer to the common local costmap
-  CostmapWrapper::Ptr local_costmap_ptr_;
+  typename CostmapWrapper<CostmapNDROS>::Ptr local_costmap_ptr_;
 
   //! Shared pointer to the common global costmap
-  CostmapWrapper::Ptr global_costmap_ptr_;
+  typename CostmapWrapper<CostmapNDROS>::Ptr global_costmap_ptr_;
 
   //! Service Server for the check_point_cost service
   ros::ServiceServer check_point_cost_srv_;

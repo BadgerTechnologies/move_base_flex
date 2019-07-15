@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019, Magazino GmbH, Sebastian Pütz, Jorge Santos Simón
+ *  Copyright 2018, Magazino GmbH, Sebastian Pütz, Jorge Santos Simón
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  costmap_wrapper.h
+ *  costmap_navigation_server.h
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -38,82 +38,47 @@
  *
  */
 
-#ifndef MBF_COSTMAP_NAV__COSTMAP_WRAPPER_H_
-#define MBF_COSTMAP_NAV__COSTMAP_WRAPPER_H_
+#ifndef MBF_COSTMAP_NAV__COSTMAP_3D_NAVIGATION_SERVER_H_
+#define MBF_COSTMAP_NAV__COSTMAP_3D_NAVIGATION_SERVER_H_
 
-#include <mbf_utility/types.h>
-
+#include "costmap_navigation_server.h"
+#include <costmap_3d/costmap_3d_ros.h>
 
 namespace mbf_costmap_nav
 {
 /**
- * @defgroup move_base_server Move Base Server
+ * @defgroup move_base_server Move Base Server using a 3D Costmap
  * @brief Classes belonging to the Move Base Server level.
  */
 
 
 /**
- * @brief The CostmapWrapper class manages access to a costmap by locking/unlocking its mutex and handles
- * (de)activation.
+ * @brief The Costmap3DNavigationServer extends the CostmapNavigationServer to use 3D costmaps.
  *
  * @ingroup navigation_server move_base_server
  */
 template<typename CostmapNDROS>
-class CostmapWrapper : public CostmapNDROS
+class Costmap3DNavigationServer : public CostmapNavigationServer<CostmapNDROS>
 {
 public:
-  typedef boost::shared_ptr<CostmapWrapper<CostmapNDROS>> Ptr;
+
+  typedef boost::shared_ptr<costmap_3d::Costmap3DROS> Costmap3DPtr;
+
+  typedef boost::shared_ptr<Costmap3DNavigationServer> Ptr;
 
   /**
    * @brief Constructor
    * @param tf_listener_ptr Shared pointer to a common TransformListener
    */
-  CostmapWrapper(const std::string &name, const TFPtr &tf_listener_ptr);
+  Costmap3DNavigationServer(const TFPtr &tf_listener_ptr);
 
   /**
    * @brief Destructor
    */
-  virtual ~CostmapWrapper();
+  virtual ~Costmap3DNavigationServer();
 
-  /**
-   * @brief Reconfiguration method called by dynamic reconfigure.
-   * @param shutdown_costmap Determines whether or not to shutdown the costmap when move_base_flex is inactive.
-   * @param shutdown_costmap_delay How long in seconds to wait after last action before shutting down the costmap.
-   */
-  void reconfigure(double shutdown_costmap, double shutdown_costmap_delay);
-
-  /**
-   * @brief Clear costmap.
-   */
-  void clear();
-
-  /**
-   * @brief Check whether the costmap should be activated.
-   */
-  void checkActivate();
-
-  /**
-   * @brief Check whether the costmap should and could be deactivated.
-   */
-  void checkDeactivate();
-
-private:
-  /**
-   * @brief Timer-triggered deactivation of the costmap.
-   */
-  void deactivate(const ros::TimerEvent &event);
-
-  //! Private node handle
-  ros::NodeHandle private_nh_;
-
-  boost::mutex check_costmap_mutex_;     //!< Start/stop costmap mutex; concurrent calls to start can lead to segfault
-  bool shutdown_costmap_;                //!< don't update costmap when not using it
-  bool clear_on_shutdown_;               //!< clear the costmap, when shutting down
-  int16_t costmap_users_;                //!< keep track of plugins using costmap
-  ros::Timer shutdown_costmap_timer_;    //!< costmap delayed shutdown timer
-  ros::Duration shutdown_costmap_delay_; //!< costmap delayed shutdown delay
 };
 
 } /* namespace mbf_costmap_nav */
 
-#endif /* MBF_COSTMAP_NAV__COSTMAP_WRAPPER_H_ */
+#endif /* MBF_COSTMAP_NAV__COSTMAP_3D_NAVIGATION_SERVER_H_ */

@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  costmap_recovery_execution.cpp
+ *  costmap_navigation_server.cpp
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -38,45 +38,26 @@
  *
  */
 
-#include <costmap_2d/costmap_2d_ros.h>
-#include <costmap_3d/costmap_3d_ros.h>
-#include <nav_core/recovery_behavior.h>
-#include "nav_core_wrapper/wrapper_recovery_behavior.h"
-#include "mbf_costmap_nav/costmap_recovery_execution.h"
+#include "costmap_3d/costmap_3d_ros.h"
+#include "mbf_costmap_nav/costmap_3d_navigation_server.h"
 
 namespace mbf_costmap_nav
 {
 
 template<typename CostmapNDROS>
-CostmapRecoveryExecution<CostmapNDROS>::CostmapRecoveryExecution(
-    const std::string &recovery_name,
-    const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
-    const TFPtr &tf_listener_ptr,
-    const typename CostmapWrapper<CostmapNDROS>::Ptr &global_costmap,
-    const typename CostmapWrapper<CostmapNDROS>::Ptr &local_costmap,
-    const MoveBaseFlexConfig &config)
-      : AbstractRecoveryExecution(recovery_name, recovery_ptr, tf_listener_ptr, toAbstract(config)),
-        global_costmap_(global_costmap), local_costmap_(local_costmap)
+Costmap3DNavigationServer<CostmapNDROS>::Costmap3DNavigationServer(const TFPtr &tf_listener_ptr) :
+  CostmapNavigationServer<CostmapNDROS>(
+      tf_listener_ptr,
+      boost::make_shared<CostmapWrapper<CostmapNDROS>>("global_costmap", tf_listener_ptr),
+      boost::make_shared<CostmapWrapper<CostmapNDROS>>("local_costmap", tf_listener_ptr))
 {
 }
 
 template<typename CostmapNDROS>
-CostmapRecoveryExecution<CostmapNDROS>::~CostmapRecoveryExecution()
+Costmap3DNavigationServer<CostmapNDROS>::~Costmap3DNavigationServer()
 {
 }
 
-template<typename CostmapNDROS>
-mbf_abstract_nav::MoveBaseFlexConfig CostmapRecoveryExecution<CostmapNDROS>::toAbstract(
-    const MoveBaseFlexConfig &config)
-{
-  // copy the recovery-related abstract configuration common to all MBF-based navigation
-  mbf_abstract_nav::MoveBaseFlexConfig abstract_config;
-  abstract_config.recovery_enabled = config.recovery_enabled;
-  abstract_config.recovery_patience = config.recovery_patience;
-  return abstract_config;
-}
-
-template class CostmapRecoveryExecution<costmap_2d::Costmap2DROS>;
-template class CostmapRecoveryExecution<costmap_3d::Costmap3DROS>;
+template class Costmap3DNavigationServer<costmap_3d::Costmap3DROS>;
 
 } /* namespace mbf_costmap_nav */

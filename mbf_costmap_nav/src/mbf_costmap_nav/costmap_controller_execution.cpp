@@ -37,18 +37,23 @@
  *    Jorge Santos Simón <santos@magazino.eu>
  *
  */
+
+#include <costmap_2d/costmap_2d_ros.h>
+#include <costmap_3d/costmap_3d_ros.h>
+
 #include "mbf_costmap_nav/costmap_controller_execution.h"
 
 namespace mbf_costmap_nav
 {
 
-CostmapControllerExecution::CostmapControllerExecution(
+template<typename CostmapNDROS>
+CostmapControllerExecution<CostmapNDROS>::CostmapControllerExecution(
     const std::string &controller_name,
     const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
     const ros::Publisher &vel_pub,
     const ros::Publisher &goal_pub,
     const TFPtr &tf_listener_ptr,
-    const CostmapWrapper::Ptr &costmap_ptr,
+    const typename CostmapWrapper<CostmapNDROS>::Ptr &costmap_ptr,
     const MoveBaseFlexConfig &config)
       : AbstractControllerExecution(controller_name, controller_ptr, vel_pub, goal_pub,
                                     tf_listener_ptr, toAbstract(config)),
@@ -58,11 +63,14 @@ CostmapControllerExecution::CostmapControllerExecution(
   private_nh.param("controller_lock_costmap", lock_costmap_, true);
 }
 
-CostmapControllerExecution::~CostmapControllerExecution()
+template<typename CostmapNDROS>
+CostmapControllerExecution<CostmapNDROS>::~CostmapControllerExecution()
 {
 }
 
-mbf_abstract_nav::MoveBaseFlexConfig CostmapControllerExecution::toAbstract(const MoveBaseFlexConfig &config)
+template<typename CostmapNDROS>
+mbf_abstract_nav::MoveBaseFlexConfig CostmapControllerExecution<CostmapNDROS>::toAbstract(
+    const MoveBaseFlexConfig &config)
 {
   // copy the controller-related abstract configuration common to all MBF-based navigation
   mbf_abstract_nav::MoveBaseFlexConfig abstract_config;
@@ -74,7 +82,8 @@ mbf_abstract_nav::MoveBaseFlexConfig CostmapControllerExecution::toAbstract(cons
   return abstract_config;
 }
 
-uint32_t CostmapControllerExecution::computeVelocityCmd(
+template<typename CostmapNDROS>
+uint32_t CostmapControllerExecution<CostmapNDROS>::computeVelocityCmd(
     const geometry_msgs::PoseStamped &robot_pose,
     const geometry_msgs::TwistStamped &robot_velocity,
     geometry_msgs::TwistStamped &vel_cmd,
@@ -89,7 +98,8 @@ uint32_t CostmapControllerExecution::computeVelocityCmd(
   return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
 }
 
-bool CostmapControllerExecution::safetyCheck()
+template<typename CostmapNDROS>
+bool CostmapControllerExecution<CostmapNDROS>::safetyCheck()
 {
   // Check that the observation buffers for the costmap are current, we don't want to drive blind
   if (!costmap_ptr_->isCurrent())
@@ -99,5 +109,8 @@ bool CostmapControllerExecution::safetyCheck()
   }
   return true;
 }
+
+template class CostmapControllerExecution<costmap_2d::Costmap2DROS>;
+template class CostmapControllerExecution<costmap_3d::Costmap3DROS>;
 
 } /* namespace mbf_costmap_nav */

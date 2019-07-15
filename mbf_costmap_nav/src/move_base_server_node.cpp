@@ -39,19 +39,27 @@
  */
 
 #include "mbf_costmap_nav/costmap_navigation_server.h"
+#include "mbf_costmap_nav/costmap_3d_navigation_server.h"
+#include <costmap_2d/costmap_2d_ros.h>
+#include <costmap_3d/costmap_3d_ros.h>
 #include <signal.h>
 #include <mbf_utility/types.h>
 #include <tf2_ros/transform_listener.h>
 
-typedef boost::shared_ptr<mbf_costmap_nav::CostmapNavigationServer> CostmapNavigationServerPtr;
-mbf_costmap_nav::CostmapNavigationServer::Ptr costmap_nav_srv_ptr;
+bool use_costmap_3d_;
+mbf_costmap_nav::CostmapNavigationServer<costmap_2d::Costmap2DROS>::Ptr costmap_nav_srv_ptr;
+mbf_costmap_nav::Costmap3DNavigationServer<costmap_3d::Costmap3DROS>::Ptr costmap_nav_srv_3d_ptr;
 
 void sigintHandler(int sig)
 {
   ROS_INFO_STREAM("Shutdown costmap navigation server.");
-  if(costmap_nav_srv_ptr)
+  if (costmap_nav_srv_ptr)
   {
     costmap_nav_srv_ptr->stop();
+  }
+  else if (costmap_nav_srv_3d_ptr)
+  {
+    costmap_nav_srv_3d_ptr->stop();
   }
   ros::shutdown();
 }
@@ -66,6 +74,8 @@ int main(int argc, char **argv)
   double cache_time;
   private_nh.param("tf_cache_time", cache_time, 10.0);
 
+  private_nh.param("use_costmap_3d", use_costmap_3d_, false);
+
   signal(SIGINT, sigintHandler);
 #ifdef USE_OLD_TF
   TFPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
@@ -73,11 +83,21 @@ int main(int argc, char **argv)
   TFPtr tf_listener_ptr(new TF(ros::Duration(cache_time)));
   tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
 #endif
-  costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::CostmapNavigationServer>(tf_listener_ptr);
+  if (use_costmap_3d_)
+  {
+    costmap_nav_srv_3d_ptr = boost::make_shared<
+      mbf_costmap_nav::Costmap3DNavigationServer<costmap_3d::Costmap3DROS>>(tf_listener_ptr);
+  }
+  else
+  {
+    costmap_nav_srv_ptr = boost::make_shared<
+      mbf_costmap_nav::CostmapNavigationServer<costmap_2d::Costmap2DROS>>(tf_listener_ptr);
+  }
   ros::spin();
 
   // explicitly call destructor here, otherwise costmap_nav_srv_ptr will be
   // destructed after tearing down internally allocated static variables
   costmap_nav_srv_ptr.reset();
+  costmap_nav_srv_3d_ptr.reset();
   return EXIT_SUCCESS;
 }

@@ -38,6 +38,9 @@
  *
  */
 
+#include <costmap_2d/costmap_2d_ros.h>
+#include <costmap_3d/costmap_3d_ros.h>
+
 #include "mbf_costmap_nav/costmap_wrapper.h"
 
 
@@ -45,8 +48,9 @@ namespace mbf_costmap_nav
 {
 
 
-CostmapWrapper::CostmapWrapper(const std::string &name, const TFPtr &tf_listener_ptr) :
-  costmap_2d::Costmap2DROS(name, *tf_listener_ptr),
+template<typename CostmapNDROS>
+CostmapWrapper<CostmapNDROS>::CostmapWrapper(const std::string &name, const TFPtr &tf_listener_ptr) :
+  CostmapNDROS(name, *tf_listener_ptr),
   shutdown_costmap_(false), costmap_users_(0), private_nh_("~")
 {
   // even if shutdown_costmaps is a dynamically reconfigurable parameter, we
@@ -56,19 +60,20 @@ CostmapWrapper::CostmapWrapper(const std::string &name, const TFPtr &tf_listener
 
   if (shutdown_costmap_)
     // initialize costmap stopped if shutdown_costmaps parameter is true
-    stop();
+    CostmapNDROS::stop();
   else
     // otherwise costmap_users_ is at least 1, as costmap is always active
     ++costmap_users_;
 }
 
-CostmapWrapper::~CostmapWrapper()
+template<typename CostmapNDROS>
+CostmapWrapper<CostmapNDROS>::~CostmapWrapper()
 {
   shutdown_costmap_timer_.stop();
 }
 
-
-void CostmapWrapper::reconfigure(double shutdown_costmap, double shutdown_costmap_delay)
+template<typename CostmapNDROS>
+void CostmapWrapper<CostmapNDROS>::reconfigure(double shutdown_costmap, double shutdown_costmap_delay)
 {
   shutdown_costmap_delay_ = ros::Duration(shutdown_costmap_delay);
   if (shutdown_costmap_delay_.isZero())
@@ -86,14 +91,16 @@ void CostmapWrapper::reconfigure(double shutdown_costmap, double shutdown_costma
   }
 }
 
-void CostmapWrapper::clear()
+template<typename CostmapNDROS>
+void CostmapWrapper<CostmapNDROS>::clear()
 {
   // lock and clear costmap
-  boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*getCostmap()->getMutex());
-  resetLayers();
+  boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*this->getCostmap()->getMutex());
+  CostmapNDROS::resetLayers();
 }
 
-void CostmapWrapper::checkActivate()
+template<typename CostmapNDROS>
+void CostmapWrapper<CostmapNDROS>::checkActivate()
 {
   boost::mutex::scoped_lock sl(check_costmap_mutex_);
 
@@ -103,13 +110,14 @@ void CostmapWrapper::checkActivate()
   // synchronized because start costmap can take up to 1/update freq., and concurrent calls to it can lead to segfaults
   if (shutdown_costmap_ && !costmap_users_)
   {
-    start();
-    ROS_DEBUG_STREAM("" << name_ << " activated");
+    CostmapNDROS::start();
+    ROS_DEBUG_STREAM("" << CostmapNDROS::name_ << " activated");
   }
   ++costmap_users_;
 }
 
-void CostmapWrapper::checkDeactivate()
+template<typename CostmapNDROS>
+void CostmapWrapper<CostmapNDROS>::checkDeactivate()
 {
   boost::mutex::scoped_lock sl(check_costmap_mutex_);
 
@@ -121,19 +129,23 @@ void CostmapWrapper::checkDeactivate()
     // navigation sequence, what is terribly inefficient; the timer is stopped on costmap re-activation and
     // reset after every new call to deactivate
     shutdown_costmap_timer_ =
-      private_nh_.createTimer(shutdown_costmap_delay_, &CostmapWrapper::deactivate, this, true);
+      private_nh_.createTimer(shutdown_costmap_delay_, &CostmapWrapper<CostmapNDROS>::deactivate, this, true);
   }
 }
 
-void CostmapWrapper::deactivate(const ros::TimerEvent &event)
+template<typename CostmapNDROS>
+void CostmapWrapper<CostmapNDROS>::deactivate(const ros::TimerEvent &event)
 {
   boost::mutex::scoped_lock sl(check_costmap_mutex_);
 
   ROS_ASSERT_MSG(!costmap_users_, "Deactivating costmap with %d active users!", costmap_users_);
   if (clear_on_shutdown_)
     clear();  // do before stop, as some layers (e.g. obstacle and voxel) reactivate their subscribers on reset
-  stop();
-  ROS_DEBUG_STREAM("" << name_ << " deactivated");
+  CostmapNDROS::stop();
+  ROS_DEBUG_STREAM("" << CostmapNDROS::name_ << " deactivated");
 }
+
+template class CostmapWrapper<costmap_2d::Costmap2DROS>;
+template class CostmapWrapper<costmap_3d::Costmap3DROS>;
 
 } /* namespace mbf_costmap_nav */
