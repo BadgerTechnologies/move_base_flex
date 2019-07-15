@@ -54,8 +54,9 @@
 namespace mbf_costmap_nav
 {
 
-
-CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
+CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr,
+                                                 const CostmapPtr &global_costmap_ptr,
+                                                 const CostmapPtr &local_costmap_ptr) :
   AbstractNavigationServer(tf_listener_ptr),
   recovery_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapRecovery"),
   nav_core_recovery_plugin_loader_("nav_core", "nav_core::RecoveryBehavior"),
@@ -63,10 +64,19 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
   nav_core_controller_plugin_loader_("nav_core", "nav_core::BaseLocalPlanner"),
   planner_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapPlanner"),
   nav_core_planner_plugin_loader_("nav_core", "nav_core::BaseGlobalPlanner"),
-  global_costmap_ptr_(new costmap_2d::Costmap2DROS("global_costmap", *tf_listener_ptr_)),
-  local_costmap_ptr_(new costmap_2d::Costmap2DROS("local_costmap", *tf_listener_ptr_)),
+  global_costmap_ptr_(global_costmap_ptr),
+  local_costmap_ptr_(local_costmap_ptr),
   setup_reconfigure_(false), shutdown_costmaps_(false)
 {
+  if (!global_costmap_ptr_)
+  {
+    global_costmap_ptr_.reset(new costmap_2d::Costmap2DROS("global_costmap", *tf_listener_ptr_));
+  }
+  if (!local_costmap_ptr_)
+  {
+    local_costmap_ptr_.reset(new costmap_2d::Costmap2DROS("local_costmap", *tf_listener_ptr_));
+  }
+
   // even if shutdown_costmaps is a dynamically reconfigurable parameter, we
   // need it here to decide whether to start or not the costmaps on starting up
   private_nh_.param("shutdown_costmaps", shutdown_costmaps_, false);

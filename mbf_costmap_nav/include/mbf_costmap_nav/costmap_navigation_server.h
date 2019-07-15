@@ -85,8 +85,12 @@ public:
   /**
    * @brief Constructor
    * @param tf_listener_ptr Shared pointer to a common TransformListener
+   * @param global_costmap_ptr Optional shared pointer to the global costmap
+   * @param local_costmap_ptr Optional shared pointer to the local costmap
    */
-  CostmapNavigationServer(const TFPtr &tf_listener_ptr);
+  CostmapNavigationServer(const TFPtr &tf_listener_ptr,
+                          const CostmapPtr &global_costmap_ptr = CostmapPtr(),
+                          const CostmapPtr &local_costmap_ptr = CostmapPtr());
 
   /**
    * @brief Destructor
