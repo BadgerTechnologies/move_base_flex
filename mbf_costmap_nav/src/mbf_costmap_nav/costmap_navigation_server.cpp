@@ -38,7 +38,7 @@
  *
  */
 
-#include <tf/tf.h>
+#include <tf2/utils.h>
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseArray.h>
 #include <mbf_msgs/MoveBaseAction.h>
@@ -54,8 +54,9 @@
 namespace mbf_costmap_nav
 {
 
-
-CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
+CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr,
+                                                 const CostmapWrapper::Ptr &global_costmap_ptr,
+                                                 const CostmapWrapper::Ptr &local_costmap_ptr) :
   AbstractNavigationServer(tf_listener_ptr),
   recovery_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapRecovery"),
   nav_core_recovery_plugin_loader_("nav_core", "nav_core::RecoveryBehavior"),
@@ -63,10 +64,19 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
   nav_core_controller_plugin_loader_("nav_core", "nav_core::BaseLocalPlanner"),
   planner_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapPlanner"),
   nav_core_planner_plugin_loader_("nav_core", "nav_core::BaseGlobalPlanner"),
-  global_costmap_ptr_(new CostmapWrapper("global_costmap", tf_listener_ptr_)),
-  local_costmap_ptr_(new CostmapWrapper("local_costmap", tf_listener_ptr_)),
+  global_costmap_ptr_(global_costmap_ptr),
+  local_costmap_ptr_(local_costmap_ptr),
   setup_reconfigure_(false)
 {
+  if (!global_costmap_ptr_)
+  {
+    global_costmap_ptr_ = boost::make_shared<CostmapWrapper>("global_costmap", tf_listener_ptr_);
+  }
+  if (!local_costmap_ptr_)
+  {
+    local_costmap_ptr_ = boost::make_shared<CostmapWrapper>("local_costmap", tf_listener_ptr_);
+  }
+
   // advertise services and current goal topic
   check_point_cost_srv_ = private_nh_.advertiseService("check_point_cost",
                                                        &CostmapNavigationServer::callServiceCheckPointCost, this);
@@ -484,7 +494,7 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
 
   double x = pose.pose.position.x;
   double y = pose.pose.position.y;
-  double yaw = tf::getYaw(pose.pose.orientation);
+  double yaw = tf2::getYaw(pose.pose.orientation);
 
   // ensure costmap is active so cost reflects latest sensor readings
   costmap->checkActivate();
@@ -618,7 +628,7 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
 
     double x = pose.pose.position.x;
     double y = pose.pose.position.y;
-    double yaw = tf::getYaw(pose.pose.orientation);
+    double yaw = tf2::getYaw(pose.pose.orientation);
     std::vector<Cell> cells_to_check;
     if (request.path_cells_only)
     {

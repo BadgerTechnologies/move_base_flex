@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(mbf_costmap_nav)
 
 find_package(catkin REQUIRED
@@ -15,7 +15,7 @@ find_package(catkin REQUIRED
   roscpp
   std_msgs
   std_srvs
-  tf
+  tf2
 )
 
 find_package(Boost COMPONENTS thread chrono REQUIRED)
@@ -48,7 +48,7 @@ catkin_package(
   roscpp
   std_msgs
   std_srvs
-  tf
+  tf2
   DEPENDS Boost
 )
 

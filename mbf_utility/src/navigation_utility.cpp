@@ -38,7 +38,7 @@
  *
  */
 
-#include <tf/tf.h>
+#include <tf2/transform_datatypes.h>
 
 #include "mbf_utility/navigation_utility.h"
 
@@ -177,9 +177,9 @@ double angle(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseS
 {
   const geometry_msgs::Quaternion &q1 = pose1.pose.orientation;
   const geometry_msgs::Quaternion &q2 = pose2.pose.orientation;
-  tf::Quaternion rot1, rot2;
-  tf::quaternionMsgToTF(q1, rot1);
-  tf::quaternionMsgToTF(q2, rot2);
+  tf2::Quaternion rot1, rot2;
+  tf2::convert(q1, rot1);
+  tf2::convert(q2, rot2);
   return rot1.angleShortestPath(rot2);
 }
 

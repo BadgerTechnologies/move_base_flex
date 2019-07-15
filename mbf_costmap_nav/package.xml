@@ -29,7 +29,7 @@
     <depend>roscpp</depend>
     <depend>std_msgs</depend>
     <depend>std_srvs</depend>
-    <depend>tf</depend>
+    <depend>tf2</depend>
 
     <!-- Required by the backward compatibility move_base relay -->
     <exec_depend>move_base</exec_depend>

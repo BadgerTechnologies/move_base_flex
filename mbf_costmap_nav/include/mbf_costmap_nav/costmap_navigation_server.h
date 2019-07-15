@@ -86,8 +86,12 @@ public:
   /**
    * @brief Constructor
    * @param tf_listener_ptr Shared pointer to a common TransformListener
+   * @param global_costmap_ptr Optional shared pointer to the global costmap
+   * @param local_costmap_ptr Optional shared pointer to the local costmap
    */
-  CostmapNavigationServer(const TFPtr &tf_listener_ptr);
+  CostmapNavigationServer(const TFPtr &tf_listener_ptr,
+                          const CostmapWrapper::Ptr &global_costmap_ptr = CostmapWrapper::Ptr(),
+                          const CostmapWrapper::Ptr &local_costmap_ptr = CostmapWrapper::Ptr());
 
   /**
    * @brief Destructor
@@ -245,10 +249,10 @@ private:
   bool setup_reconfigure_;
 
   //! Shared pointer to the common local costmap
-  const CostmapWrapper::Ptr local_costmap_ptr_;
+  CostmapWrapper::Ptr local_costmap_ptr_;
 
   //! Shared pointer to the common global costmap
-  const CostmapWrapper::Ptr global_costmap_ptr_;
+  CostmapWrapper::Ptr global_costmap_ptr_;
 
   //! Service Server for the check_point_cost service
   ros::ServiceServer check_point_cost_srv_;
