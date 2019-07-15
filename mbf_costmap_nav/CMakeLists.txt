@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(mbf_costmap_nav)
 
+set(CMAKE_CXX_STANDARD 11)
+
 find_package(catkin REQUIRED
   COMPONENTS
   base_local_planner
+  costmap_3d
   dynamic_reconfigure
   geometry_msgs
   mbf_abstract_nav
@@ -36,6 +39,7 @@ catkin_package(
   actionlib
   actionlib_msgs
   base_local_planner
+  costmap_3d
   dynamic_reconfigure
   geometry_msgs
   mbf_abstract_nav
@@ -71,6 +75,7 @@ target_link_libraries(${MBF_NAV_CORE_WRAPPER_LIB}
 
 add_library(${MBF_COSTMAP_2D_SERVER_LIB}
   src/mbf_costmap_nav/costmap_navigation_server.cpp
+  src/mbf_costmap_nav/costmap_3d_navigation_server.cpp
   src/mbf_costmap_nav/costmap_planner_execution.cpp
   src/mbf_costmap_nav/costmap_controller_execution.cpp
   src/mbf_costmap_nav/costmap_recovery_execution.cpp

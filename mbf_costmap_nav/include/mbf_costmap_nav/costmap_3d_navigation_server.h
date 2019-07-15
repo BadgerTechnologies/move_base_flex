@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  move_base_server_node.cpp
+ *  costmap_navigation_server.h
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -38,53 +38,45 @@
  *
  */
 
-#include "mbf_costmap_nav/costmap_navigation_server.h"
-#include "mbf_costmap_nav/costmap_3d_navigation_server.h"
-#include <signal.h>
-#include <mbf_utility/types.h>
-#include <tf2_ros/transform_listener.h>
+#ifndef MBF_COSTMAP_NAV__COSTMAP_3D_NAVIGATION_SERVER_H_
+#define MBF_COSTMAP_NAV__COSTMAP_3D_NAVIGATION_SERVER_H_
 
-typedef boost::shared_ptr<mbf_costmap_nav::CostmapNavigationServer> CostmapNavigationServerPtr;
-mbf_costmap_nav::CostmapNavigationServer::Ptr costmap_nav_srv_ptr;
+#include "costmap_navigation_server.h"
+#include <costmap_3d/costmap_3d_ros.h>
 
-void sigintHandler(int sig)
+namespace mbf_costmap_nav
 {
-  ROS_INFO_STREAM("Shutdown costmap navigation server.");
-  if(costmap_nav_srv_ptr)
-  {
-    costmap_nav_srv_ptr->stop();
-  }
-  ros::shutdown();
-}
+/**
+ * @defgroup move_base_server Move Base Server using a 3D Costmap
+ * @brief Classes belonging to the Move Base Server level.
+ */
 
-int main(int argc, char **argv)
+
+/**
+ * @brief The Costmap3DNavigationServer extends the CostmapNavigationServer to use 3D costmaps.
+ *
+ * @ingroup navigation_server move_base_server
+ */
+class Costmap3DNavigationServer : public CostmapNavigationServer
 {
-  ros::init(argc, argv, "mbf_2d_nav_server", ros::init_options::NoSigintHandler);
+public:
 
-  ros::NodeHandle nh;
-  ros::NodeHandle private_nh("~");
+  typedef boost::shared_ptr<costmap_3d::Costmap3DROS> Costmap3DPtr;
 
-  double cache_time;
-  private_nh.param("tf_cache_time", cache_time, 10.0);
+  typedef boost::shared_ptr<Costmap3DNavigationServer> Ptr;
 
-  bool use_costmap_3d;
-  private_nh.param("use_costmap_3d", use_costmap_3d, false);
+  /**
+   * @brief Constructor
+   * @param tf_listener_ptr Shared pointer to a common TransformListener
+   */
+  Costmap3DNavigationServer(const TFPtr &tf_listener_ptr);
 
-  signal(SIGINT, sigintHandler);
-#ifdef USE_OLD_TF
-  TFPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
-#else
-  TFPtr tf_listener_ptr(new TF(ros::Duration(cache_time)));
-  tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
-#endif
-  if (use_costmap_3d)
-  {
-    costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::Costmap3DNavigationServer>(tf_listener_ptr);
-  }
-  else
-  {
-    costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::CostmapNavigationServer>(tf_listener_ptr);
-  }
-  ros::spin();
-  return EXIT_SUCCESS;
-}
+  /**
+   * @brief Destructor
+   */
+  virtual ~Costmap3DNavigationServer();
+};
+
+} /* namespace mbf_costmap_nav */
+
+#endif /* MBF_COSTMAP_NAV__COSTMAP_3D_NAVIGATION_SERVER_H_ */
