@@ -337,6 +337,8 @@ void CostmapNavigationServer::stop()
 
 CostmapNavigationServer::~CostmapNavigationServer()
 {
+	delete global_costmap_ptr_;
+	delete local_costmap_ptr_;
 }
 
 void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)
