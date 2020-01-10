@@ -270,7 +270,7 @@ namespace mbf_abstract_nav
     {
       while (moving_ && ros::ok())
       {
-        boost::chrono::thread_clock::time_point loop_start_time = boost::chrono::thread_clock::now();
+        boost::chrono::steady_clock::time_point loop_start_time = boost::chrono::steady_clock::now();
 
         if (cancel_)
         {
@@ -376,7 +376,7 @@ namespace mbf_abstract_nav
           }
         }
 
-        boost::chrono::thread_clock::time_point end_time = boost::chrono::thread_clock::now();
+        boost::chrono::steady_clock::time_point end_time = boost::chrono::steady_clock::now();
         boost::chrono::microseconds execution_duration =
             boost::chrono::duration_cast<boost::chrono::microseconds>(end_time - loop_start_time);
         configuration_mutex_.lock();
