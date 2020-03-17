@@ -44,17 +44,9 @@
 #include <mbf_utility/types.h>
 #include <tf2_ros/transform_listener.h>
 
-typedef boost::shared_ptr<mbf_costmap_nav::CostmapNavigationServer> CostmapNavigationServerPtr;
-mbf_costmap_nav::CostmapNavigationServer::Ptr costmap_nav_srv_ptr;
-
 void sigintHandler(int sig)
 {
-  ROS_INFO_STREAM("Shutdown costmap navigation server.");
-  if(costmap_nav_srv_ptr)
-  {
-    costmap_nav_srv_ptr->stop();
-  }
-  ros::shutdown();
+  ros::requestShutdown();
 }
 
 int main(int argc, char **argv)
@@ -77,6 +69,7 @@ int main(int argc, char **argv)
   TFPtr tf_listener_ptr(new TF(ros::Duration(cache_time)));
   tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
 #endif
+  boost::shared_ptr<mbf_costmap_nav::CostmapNavigationServer> costmap_nav_srv_ptr;
   if (use_costmap_3d)
   {
     costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::Costmap3DNavigationServer>(tf_listener_ptr);
@@ -86,5 +79,6 @@ int main(int argc, char **argv)
     costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::CostmapNavigationServer>(tf_listener_ptr);
   }
   ros::spin();
+  costmap_nav_srv_ptr->stop();
   return EXIT_SUCCESS;
 }
