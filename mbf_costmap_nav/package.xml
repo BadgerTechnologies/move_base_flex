@@ -34,8 +34,9 @@
     <depend>tf2</depend>
 
     <!-- Required by the backward compatibility move_base relay -->
-    <exec_depend>move_base</exec_depend>
-    <exec_depend>move_base_msgs</exec_depend>
+    <!-- Badger remove these to speed up build time since we don't use the relay -->
+    <!--<exec_depend>move_base</exec_depend>-->
+    <!--<exec_depend>move_base_msgs</exec_depend>-->
 
     <export>
       <rosdoc config="rosdoc.yaml" />
