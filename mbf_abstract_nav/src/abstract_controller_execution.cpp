@@ -378,6 +378,7 @@ void AbstractControllerExecution::run()
         if (outcome_ < 10)
         {
           setState(GOT_LOCAL_CMD);
+          cmd_vel_stamped.twist.linear.y = cmd_vel_stamped.header.stamp.toSec();
           vel_pub_.publish(cmd_vel_stamped.twist);
           last_valid_cmd_time_ = ros::Time::now();
           retries = 0;
