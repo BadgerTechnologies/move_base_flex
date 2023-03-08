@@ -310,7 +310,7 @@ void AbstractPlannerExecution::run()
         }
         else if (max_retries_ > 0 && ++retries > max_retries_)
         {
-          ROS_INFO_STREAM("Planning reached max retries! (" << max_retries_ << ")");
+          ROS_INFO_STREAM_THROTTLE(1.0, "Planning reached max retries! (" << max_retries_ << ")");
           setState(MAX_RETRIES, true);
         }
         else if (isPatienceExceeded())
