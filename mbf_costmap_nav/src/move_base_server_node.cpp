@@ -62,6 +62,8 @@ int main(int argc, char **argv)
   private_nh.param("tf_cache_time", cache_time, 10.0);
   bool use_costmap_3d;
   private_nh.param("use_costmap_3d", use_costmap_3d, false);
+  int thread_count;
+  private_nh.param("thread_count", thread_count, 0);
 
   signal(SIGINT, sigintHandler);
 #ifdef USE_OLD_TF
@@ -82,7 +84,16 @@ int main(int argc, char **argv)
     costmap_nav_srv_ptr = boost::make_shared<
       mbf_costmap_nav::CostmapNavigationServer<costmap_2d::Costmap2DROS>>(tf_listener_ptr);
   }
-  ros::spin();
+  // Negative thread count, means just use a single thread
+  if (thread_count < 0)
+  {
+    ros::spin();
+  }
+  else
+  {
+    ros::MultiThreadedSpinner spinner(thread_count);
+    spinner.spin();
+  }
 
   if (costmap_nav_srv_ptr)
   {
