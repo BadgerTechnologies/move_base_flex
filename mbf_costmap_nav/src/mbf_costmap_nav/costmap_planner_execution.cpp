@@ -93,10 +93,22 @@ uint32_t CostmapPlannerExecution<CostmapNDROS>::makePlan(const geometry_msgs::Po
   const std::string frame = costmap_ptr_->getGlobalFrameID();
   geometry_msgs::PoseStamped g_start, g_goal;
 
-  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, timeout, start, g_start))
+  if (start.header.frame_id.length() == 0)
+  {
+    ROS_WARN("In makePlan: Start pose frame id empty");
+    g_start = start;
+    g_start.header.frame_id = frame;
+  }
+  else if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, timeout, start, g_start))
     return mbf_msgs::GetPathResult::TF_ERROR;
 
-  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, timeout, goal, g_goal))
+  if (goal.header.frame_id.length() == 0)
+  {
+    ROS_WARN("In makePlan: Goal pose frame id empty");
+    g_goal = goal;
+    g_start.header.frame_id = frame;
+  }
+  else if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, timeout, goal, g_goal))
     return mbf_msgs::GetPathResult::TF_ERROR;
 
   if (lock_costmap_)

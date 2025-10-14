@@ -94,7 +94,7 @@ bool transformPose(const TF &tf,
 
   if (!success)
   {
-    ROS_WARN_STREAM("Failed to look up transform from frame '" << in.header.frame_id << "' into frame '" << target_frame
+    ROS_WARN_STREAM("transformPose Failed to look up transform from frame '" << in.header.frame_id << "' into frame '" << target_frame
                     << "': " << error_msg);
     return false;
   }
@@ -141,7 +141,7 @@ bool transformPoint(const TF &tf,
 
   if (!success)
   {
-    ROS_WARN_STREAM("Failed to look up transform from frame '" << in.header.frame_id << "' into frame '" << target_frame
+    ROS_WARN_STREAM("transformPoint Failed to look up transform from frame '" << in.header.frame_id << "' into frame '" << target_frame
                                                                << "': " << error_msg);
     return false;
   }

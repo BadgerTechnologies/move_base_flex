@@ -503,6 +503,7 @@ bool CostmapNavigationServer<CostmapNDROS>::callServiceCheckPoseCost(mbf_msgs::C
   }
   else
   {
+    ROS_INFO("FLAG callServiceCheckPoseCost");
     if (!mbf_utility::transformPose(*tf_listener_ptr_, costmap_frame, ros::Duration(0.5), request.pose, pose))
     {
       ROS_ERROR_STREAM("Transform target pose to " << costmap_name << " frame '" << costmap_frame << "' failed");
@@ -639,6 +640,7 @@ bool CostmapNavigationServer<CostmapNDROS>::callServiceCheckPathCost(mbf_msgs::C
   {
     response.last_checked = i;
 
+    ROS_INFO("FLAG callServiceCheckPathCost");
     if (!mbf_utility::transformPose(*tf_listener_ptr_, costmap_frame, ros::Duration(0.5), request.path.poses[i], pose))
     {
       ROS_ERROR_STREAM("Transform target pose to " << costmap_name << " frame '" << costmap_frame << "' failed");

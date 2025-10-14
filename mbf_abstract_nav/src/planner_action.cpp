@@ -268,6 +268,7 @@ bool PlannerAction::transformPlanToGlobalFrame(const std::vector<geometry_msgs::
   for (iter = plan.begin(); iter != plan.end(); ++iter)
   {
     geometry_msgs::PoseStamped global_pose;
+    ROS_INFO("FLAG transformPlanToGlobalFrame");
     tf_success = mbf_utility::transformPose(robot_info_.getTransformListener(), robot_info_.getGlobalFrame(),
                                             robot_info_.getTfTimeout(), *iter, global_pose);
     if (!tf_success)
