@@ -91,6 +91,11 @@ CostmapNavigationServer<CostmapNDROS>::CostmapNavigationServer(
   clear_costmaps_srv_ = private_nh_.advertiseService("clear_costmaps",
       &CostmapNavigationServer<CostmapNDROS>::callServiceClearCostmaps, this);
 
+  // clear costmaps when a new initial pose is set (e.g. from rviz or localization reset)
+  ros::NodeHandle nh;
+  initial_pose_sub_ = nh.subscribe("/initialpose", 1,
+      &CostmapNavigationServer<CostmapNDROS>::initialPoseCB, this);
+
   // dynamic reconfigure server for mbf_costmap_nav configuration; also include abstract server parameters
   dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
   dsrv_costmap_->setCallback(boost::bind(&CostmapNavigationServer<CostmapNDROS>::reconfigure, this, _1, _2));
@@ -741,6 +746,15 @@ bool CostmapNavigationServer<CostmapNDROS>::callServiceClearCostmaps(std_srvs::E
   local_costmap_ptr_->clear();
   global_costmap_ptr_->clear();
   return true;
+}
+
+template<typename CostmapNDROS>
+void CostmapNavigationServer<CostmapNDROS>::initialPoseCB(
+    const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& /*msg*/)
+{
+  ROS_INFO("move_base: initial pose received, clearing costmaps");
+  local_costmap_ptr_->clear();
+  global_costmap_ptr_->clear();
 }
 
 template class CostmapNavigationServer<costmap_2d::Costmap2DROS>;

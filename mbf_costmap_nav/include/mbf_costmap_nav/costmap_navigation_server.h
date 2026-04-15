@@ -43,6 +43,7 @@
 
 #include <mbf_abstract_nav/abstract_navigation_server.h>
 
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <std_srvs/Empty.h>
 #include <mbf_msgs/CheckPath.h>
 #include <mbf_msgs/CheckPose.h>
@@ -224,6 +225,8 @@ private:
    */
   bool callServiceClearCostmaps(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response);
 
+  void initialPoseCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);
+
   /**
    * @brief Reconfiguration method called by dynamic reconfigure.
    * @param config Configuration parameters. See the MoveBaseFlexConfig definition.
@@ -267,6 +270,9 @@ private:
 
   //! Service Server for the clear_costmap service
   ros::ServiceServer clear_costmaps_srv_;
+
+  //! Subscriber to clear costmaps on /initialpose
+  ros::Subscriber initial_pose_sub_;
 };
 
 } /* namespace mbf_costmap_nav */
